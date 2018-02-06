@@ -7,7 +7,7 @@ If you want to make your Raspberry Pi become a cheap KNX-IP-Gateway and/or want 
 
 # What else is necessary?
 
-You need some gateway, I use the self-build [freebus FT1.2](http://selfbus.myxwiki.org/xwiki/bin/view/Ger%C3%A4te/Kommunikation/FT12_Raspi), but almost any other will do as well if you change the `knxd_opts:` line in `raspi_knxd/defaults/main.yml`.
+You need some gateway, I use the homemade [selfbus FT1.2 Adapter](http://selfbus.myxwiki.org/xwiki/bin/view/Ger%C3%A4te/Kommunikation/FT12_Raspi), but almost any other will do as well if you change the `knxd_opts:` line in `raspi_knxd/defaults/main.yml`.
 
 You should have basic knowlege about the raspi, Linux-commands, ssh etc.
 
