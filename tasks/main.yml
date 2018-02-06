@@ -1,0 +1,102 @@
+---
+- name: install dependencies
+  action: apt name={{item}} state=latest update_cache=true
+  with_items:
+    - cdbs
+    - automake
+    - libtool
+    - libusb-1.0-0-dev
+    - libsystemd-dev
+    - dh-systemd
+    - libev-dev
+    - libfmt3-dev
+    - git
+  become: true
+  become_user: root
+
+- name: clone knxd from github
+  git :
+    repo: 'https://github.com/knxd/knxd'
+    dest: /home/pi/knxd
+    version: "{{ knxd_version }}"
+  register: gitclone
+    
+- name: create build dir
+  file: state=directory path=knxd_build_dir
+
+- name: look for old deb-files
+  find:
+    paths: /home/pi
+    patterns: "*.deb"
+  register: find_results
+  when: gitclone.changed
+
+- name: remove old deb-files
+  file:
+    path: "{{ item['path'] }}"
+    state: absent
+  with_items: "{{ find_results['files'] }}"
+  when: gitclone.changed
+
+- name: build knxd (~1h!)
+  command: "dpkg-buildpackage -b -uc chdir=knxd"
+  when: gitclone.changed
+
+- name: get file-list for deb-packages
+  find:
+    paths: /home/pi
+    patterns: "*.deb"
+  register: find_results
+  when: gitclone.changed
+
+- name: install knxd
+  apt:
+    deb: "{{item['path']}}"
+  become: true
+  become_user: root
+  with_items: "{{ find_results['files'] }}"
+  when: gitclone.changed
+  register: restart_knxd
+
+- name: Add user 'knxd' to group dialout
+  user: name='knxd'
+        groups=dialout
+        append=yes
+  become: true
+  become_user: root
+  register: reboot
+
+- name: make setting to use the selfbus controller ft12
+  lineinfile: 
+    path: /etc/knxd.conf
+    regexp: '^KNXD_OPTS='
+    line: '{{ knxd_opts }}'
+  become: true
+  become_user: root
+  register: restart_knxd
+
+#- name: restart knxd
+#  block:
+#    - service:
+#      name: knxd
+#      state: stopped
+#    - service:
+#      name: knxd
+#      state: started
+#  when:
+#    - restart_knxd.changed
+#    - reboot.changed == false
+
+- name: reboot the raspi
+  shell: reboot
+  async: 1
+  poll: 0
+  become: true
+  become_user: root
+  when:
+    restart_knxd.changed or reboot.changed
+  register: rebooting
+
+- name: Wait for the server to finish rebooting
+  local_action: wait_for host={{ ansible_ssh_host }} state=started port=22 delay=60 timeout=500 connect_timeout=15
+  when: rebooting.changed
