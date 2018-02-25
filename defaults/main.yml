@@ -2,4 +2,5 @@
 
 knxd_version: v0.14
 
-knxd_opts: KNXD_OPTS="-e 0.0.100 -E 0.0.2:8 -u /tmp/eib -b ft12:/dev/ttyAMA0"
+knxd_opts: KNXD_OPTS="-e 0.0.100 -E 0.0.2:8 -u /tmp/eib -D -T -R -S -b ft12:/dev/ttyAMA0"
+# -D -T (-R) -S für Server-Mode (auf extern hören)

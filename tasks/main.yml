@@ -1,4 +1,11 @@
 ---
+#- name: Install knxd
+#  hosts: all
+#  remote_user: pi
+##  become_user: root
+##  become: true
+#
+#  tasks:
 - name: install dependencies
   action: apt name={{item}} state=latest update_cache=true
   with_items:
@@ -37,27 +44,28 @@
     state: absent
   with_items: "{{ find_results['files'] }}"
   when: gitclone.changed
-
+  
 - name: build knxd (~1h!)
   command: "dpkg-buildpackage -b -uc chdir=knxd"
   when: gitclone.changed
-
+  
 - name: get file-list for deb-packages
   find:
     paths: /home/pi
     patterns: "*.deb"
   register: find_results
   when: gitclone.changed
-
+  
 - name: install knxd
   apt:
     deb: "{{item['path']}}"
   become: true
   become_user: root
   with_items: "{{ find_results['files'] }}"
+  retries: 3 # because the order is not necessarely according to the dependencies
   when: gitclone.changed
   register: restart_knxd
-
+  
 - name: Add user 'knxd' to group dialout
   user: name='knxd'
         groups=dialout
@@ -65,7 +73,7 @@
   become: true
   become_user: root
   register: reboot
-
+  
 - name: make setting to use the selfbus controller ft12
   lineinfile: 
     path: /etc/knxd.conf
@@ -75,17 +83,17 @@
   become_user: root
   register: restart_knxd
 
-#- name: restart knxd
-#  block:
-#    - service:
-#      name: knxd
-#      state: stopped
-#    - service:
-#      name: knxd
-#      state: started
-#  when:
-#    - restart_knxd.changed
-#    - reboot.changed == false
+#  - name: restart knxd
+#    block:
+#      - service:
+#        name: knxd
+#        state: stopped
+#      - service:
+#        name: knxd
+#        state: started
+#    when:
+#      - restart_knxd.changed
+#      - reboot.changed == false
 
 - name: reboot the raspi
   shell: reboot
