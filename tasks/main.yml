@@ -83,6 +83,14 @@
   become_user: root
   register: restart_knxd
 
+- name: disable Bluetooth (which is using /dev/ttyAMA0 on RPi 3)
+  lineinfile: 
+    path: /boot/config.txt
+    line: 'dtoverlay=pi3-disable-bt'
+  become: true
+  become_user: root
+  register: reboot
+
 #  - name: restart knxd
 #    block:
 #      - service:
