@@ -45,7 +45,7 @@
   with_items: "{{ find_results['files'] }}"
   when: gitclone.changed
   
-- name: build knxd (~1h!)
+- name: build knxd (~1h on RPi1!)
   command: "dpkg-buildpackage -b -uc chdir=knxd"
   when: gitclone.changed
   
@@ -103,16 +103,15 @@
 #      - restart_knxd.changed
 #      - reboot.changed == false
 
-- name: reboot the raspi
-  shell: reboot
-  async: 1
-  poll: 0
+- name: Reboot server
   become: true
   become_user: root
-  when:
-    restart_knxd.changed or reboot.changed
-  register: rebooting
+  shell: sleep 2 && shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: reboot.changed
 
 - name: Wait for the server to finish rebooting
   local_action: wait_for host={{ ansible_ssh_host }} state=started port=22 delay=60 timeout=500 connect_timeout=15
-  when: rebooting.changed
+  when: reboot.changed
