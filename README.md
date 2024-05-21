@@ -1,6 +1,8 @@
 # raspi_knxd
 Ansible-role to install knxd on a raspberry pi
 
+_2024: Since knxd is in the debian repositories for a while now I'll archive this, __consider this as deprecated__!_
+
 # Who needs this?
 
 If you want to make your Raspberry Pi become a cheap KNX-IP-Gateway and/or want it to act as a powerful KNX-Server for heating-control, Smartphone-access, speech-control and other fancy stuff, then read on.
